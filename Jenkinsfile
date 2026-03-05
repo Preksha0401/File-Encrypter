@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'agent' }
+    agent any
 
     stages {
 
@@ -7,12 +7,11 @@ pipeline {
             steps {
                 sh '''
                     echo "Building Java project..."
+                    echo "Listing workspace contents:"
                     ls
                     cd "Password Protection"
-
                     mkdir -p build
                     javac -d build src/*.java
-
                     echo "Build successful"
                 '''
             }
@@ -31,26 +30,13 @@ pipeline {
                     fi
 
                     mkdir -p test-build
-
-                    javac -cp junit-platform-console-standalone.jar:build \
-                    -d test-build test/*.java
+                    javac -cp junit-platform-console-standalone.jar:build -d test-build test/*.java
 
                     java -jar junit-platform-console-standalone.jar \
-                    --class-path build:test-build \
-                    --scan-class-path
-                '''
-            }
-        }
+                        --class-path build:test-build \
+                        --scan-class-path
 
-        stage('Package') {
-            steps {
-                sh '''
-                    echo "Packaging application..."
-                    cd "Password Protection"
-
-                    jar cf FileEncrypter.jar -C build .
-
-                    echo "Artifact created"
+                    echo "JUnit tests executed successfully"
                 '''
             }
         }
@@ -58,12 +44,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    echo "Deployment stage..."
-                    echo "Artifact ready: FileEncrypter.jar"
+                    echo "Packaging application..."
+                    cd "Password Protection"
+                    jar cf FileEncrypter.jar -C build .
+                    echo "Deployment successful"
                 '''
             }
         }
-
     }
 
     post {
